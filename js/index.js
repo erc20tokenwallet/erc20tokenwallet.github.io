@@ -73,6 +73,20 @@ function getMetaMask() {
   }, 100);
 }
 
+function processBlocks(blockNumberStart, blockNumberEnd) {
+  for (var i = blockNumberStart; i <= blockNumberEnd; i++) {
+    web3.eth.getBlock(i, true, function(err, block) {
+      if (block != null && block.transactions != null) {
+        block.transactions.forEach( function(tx) {
+          if (account == "*" || account == tx.from || account == tx.to) {
+            addTx(block, tx);
+          }
+        })
+      }
+    });
+  }
+}
+
 function startApp(account) {
   $('#send').click(function() {
     sendTokens($('#txAddress').val(), $('#txAmount').val());
@@ -82,18 +96,21 @@ function startApp(account) {
   setBalance();
   setInterval(setBalance, 5000);
 
+  var lastProcessedBlockNumber;
+
   web3.eth.getBlockNumber(function(err, blockNumber) {
-    for (var i = blockNumber - 500; i <= blockNumber; i++) {
-      var block = web3.eth.getBlock(i, true, function(err, block) {
-        if (block != null && block.transactions != null) {
-          block.transactions.forEach( function(tx) {
-            if (account == "*" || account == tx.from || account == tx.to) {
-              addTx(block, tx);
-            }
-          })
+    processBlocks(blockNumber - 500, blockNumber);
+
+    lastProcessedBlockNumber = blockNumber;
+
+    setInterval(function(){
+      web3.eth.getBlockNumber(function(err, blockNumber) {
+        if (blockNumber > lastProcessedBlockNumber) {
+          processBlocks(lastProcessedBlockNumber + 1, blockNumber);
+          lastProcessedBlockNumber = blockNumber;
         }
       });
-    }
+    }, 2000);
   });
 
   $('#eth-address').html(account);
