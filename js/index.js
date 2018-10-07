@@ -117,7 +117,7 @@ function startApp(account) {
 }
 
 function sendTokens(to,amount) {
-  contract.transfer(to,amount*1000, function(err, res) {
+  contract.transfer(to,amount * 100, function(err, res) {
     var txChecker = setInterval(function() {
       web3.eth.getTransactionReceipt(String(res), function(e,r) {
         setBalance();
