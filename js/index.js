@@ -66,14 +66,14 @@ function getMetaMask() {
     if (typeof contract != 'undefined') {
       if (typeof account != 'undefined') {
         $('#wallet').show();
-        startApp();
+        startApp(account);
         clearInterval(checker);
       }
     }
   }, 100);
 }
 
-function startApp() {
+function startApp(account) {
   $('#send').click(function() {
     sendTokens($('#txAddress').val(), $('#txAmount').val());
   });
@@ -81,7 +81,21 @@ function startApp() {
   console.log('Locke contract address: '+CONTRACT_STRING);
   setBalance();
   setInterval(setBalance, 5000);
-  setTxHistory();
+
+  web3.eth.getBlockNumber(function(err, blockNumber) {
+    for (var i = blockNumber - 500; i <= blockNumber; i++) {
+      var block = web3.eth.getBlock(i, true, function(err, block) {
+        if (block != null && block.transactions != null) {
+          block.transactions.forEach( function(tx) {
+            if (account == "*" || account == tx.from || account == tx.to) {
+              addTx(block, tx);
+            }
+          })
+        }
+      });
+    }
+  });
+
   $('#eth-address').html(account);
   $('#qr-address').attr('src', 'https://chart.googleapis.com/chart?cht=qr&chl=' + account + '&chs=235x235&chld=L|0')
 }
@@ -104,47 +118,17 @@ function setBalance() {
   })
 }
 
-function setTxHistory() {
-  var txs = [];
-  $.getJSON('https://api.etherscan.io/api?module=account&action=txlist&address=' + CONTRACT_STRING + '&startblock=0&endblock=99999999&apikey=SQQJW5RNPKY13ZENIGTUXQD2PCKS5425EA', function(data) {
-    data.result.sort(function(a,b) {
-      return b.timeStamp - a.timeStamp;
-    });
-    for (i = 0; i < data.result.length; i++) {
-      web3.eth.getTransactionReceipt(data.result[i].hash, function(err,res) {
-        if (res.to == contract.address.toLowerCase()) {
-          if (res.logs.length != 0) {
-            var from = no0s(res.logs[0].topics[1]);
-            var to = no0s(res.logs[0].topics[2]);
-            if (from == account || to == account) {
-              web3.eth.getBlock(res.blockHash, function(e,r) {
-                addTx({
-                  from: from,
-                  to: to,
-                  block: r.hash,
-                  time: r.timestamp,
-                  hash: res.transactionHash,
-                  amount: l(web3.toDecimal(res.logs[0].data))
-                });
-              });
-            }
-          }
-        }
-      });
-    }
-  });
-}
+function addTx(block, tx) {
+  var ref = 'https://etherscan.io/tx/' + tx.hash;
 
-function addTx(json) {
-  var ref = 'https://etherscan.io/tx/'+json.hash;
   var message = '';
-  if (json.to == account) {
-    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>From:</b> '+json.from+'</p>';
+  if (tx.to == account) {
+    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>From:</b> '+tx.from+'</p>';
   } else {
-    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>To:</b> '+json.to+'</p>';
+    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>To:</b> '+tx.to+'</p>';
   }
-  message += '<p>'+json.amount+'</p>';
-  message += '<p class="date">'+date(json.time*1000)+'</p>';
+  message += '<p>'+web3.fromWei(web3.toDecimal(tx.value))+'</p>';
+  message += '<p class="date">' + date(block.timestamp * 1000) + '</p>';
   message += '</div></a>';
   $('#txList').append(message);
 }
