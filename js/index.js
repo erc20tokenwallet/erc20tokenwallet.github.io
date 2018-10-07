@@ -222,7 +222,7 @@ function getBrowser() {
 }
 
 function l(inp) {
-  return commas(inp/1000);
+  return commas(inp/100);
 }
 
 function commas(inp) {
