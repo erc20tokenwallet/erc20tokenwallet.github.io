@@ -134,19 +134,28 @@ function setBalance() {
   })
 }
 
-function addTx(block, tx) {
-  var ref = 'https://etherscan.io/tx/' + tx.hash;
+function accountLink(address) {
+  return '<a href="http://explorer.psico.exchange/account.html?hash=' + address + '">' + address + '</a>';
+}
 
-  var message = '';
+function amountLink(hash, amount) {
+  return '<a href="http://explorer.psico.exchange/tx.html?hash=' + hash + '">' + amount + '</a>';
+}
+
+function addTx(block, tx) {
+  var trHtml = '<tr>';
+
   if (tx.to == account) {
-    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>From:</b> '+tx.from+'</p>';
+    trHtml += '<td><b>From:  </b>' + accountLink(tx.from) + '</td>';
   } else {
-    message += '<a href="'+ref+'" class="list-group-item"><div class="tx"><p><b>To:</b> '+tx.to+'</p>';
+    trHtml += '<td><b>From:  </b>' + accountLink(tx.to) + '</td>';
   }
-  message += '<p>'+web3.fromWei(web3.toDecimal(tx.value))+'</p>';
-  message += '<p class="date">' + date(block.timestamp * 1000) + '</p>';
-  message += '</div></a>';
-  $('#txList').append(message);
+
+  trHtml += '<td>' + amountLink(tx.hash, web3.fromWei(web3.toDecimal(tx.value)))  + '</td>';
+  trHtml += '<td>' + date(block.timestamp * 1000) + '</td>';
+  trHtml += '</tr>';
+
+  $('#txList').append(trHtml);
 }
 
 function no0s(add) {
