@@ -138,8 +138,8 @@ function accountLink(address) {
   return '<a href="http://explorer.psico.exchange/account.html?hash=' + address + '">' + address + '</a>';
 }
 
-function amountLink(hash, amount) {
-  return '<a href="http://explorer.psico.exchange/tx.html?hash=' + hash + '">' + amount + '</a>';
+function amountLink(hash, amount, unit) {
+  return '<a href="http://explorer.psico.exchange/tx.html?hash=' + hash + '">' + amount + ' ' + unit + '</a>';
 }
 
 function addTx(block, tx) {
@@ -151,7 +151,7 @@ function addTx(block, tx) {
     trHtml += '<td><b>From:  </b>' + accountLink(tx.to) + '</td>';
   }
 
-  trHtml += '<td>' + amountLink(tx.hash, web3.fromWei(web3.toDecimal(tx.value)))  + '</td>';
+  trHtml += '<td>' + amountLink(tx.hash, web3.fromWei(web3.toDecimal(tx.value)), 'ether')  + '</td>';
   trHtml += '<td>' + date(block.timestamp * 1000) + '</td>';
   trHtml += '</tr>';
 
