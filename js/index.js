@@ -91,8 +91,7 @@ function startApp(account) {
   $('#send').click(function() {
     sendTokens($('#txAddress').val(), $('#txAmount').val());
   });
-  console.log('account public address: '+account);
-  console.log('Locke contract address: '+CONTRACT_STRING);
+
   setBalance();
   setInterval(setBalance, 5000);
 
