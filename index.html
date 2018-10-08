@@ -22,7 +22,7 @@
           <h3 class='section-title'>Send</h3>
           <div class='inner'>
             <div class='txDiv' style='margin-bottom:15px'>Address: <input class='txInput' type='text' id='txAddress'><br></div>
-            <div class='txDiv'>Amount: <input class='txInput' type='text' id='txAmount'><br><button class='btn' id='send'>Send Tokens</button></div>
+            <div class='txDiv'>Amount: <input class='txInput' type='text' id='txAmount'><br><button class='btn send eur'>Send EUR</button><button class='btn send usd'>Send USD</button></div>
           </div>
         </div>
       </div>
@@ -37,18 +37,15 @@
           </div>
         </div>
         <div class='col-4'>
-          <div class='section'>
-            <h3 class='section-title'>Balance</h3>
+          <div class='section balances'>
+            <h3 class='section-title'>Balances</h3>
             <div class='inner'>
-              <center><h1 id='balance'></h1></center>
-              <center><h3>TOKENS</h3></center>
+              <center><h1 class='eur'></h1></center>
+              <center><h3>EUR</h3></center>
             </div>
-          </div>
-          <div class='section'>
-            <h3 class='section-title'>Resources</h3>
-            <div class='inner' id='resources'>
-              <a role='button' class='btn resource' id='blockexplorer'>Block Explorer</a>
-              <a role='button' class='btn resource disabled' href='' style='margin-top:10px'>FAQ</a>
+            <div class='inner'>
+              <center><h1 class='usd'></h1></center>
+              <center><h3>USD</h3></center>
             </div>
           </div>
         </div>

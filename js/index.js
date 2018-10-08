@@ -1,12 +1,20 @@
 var account;
 var contract;
 
-const CONTRACT_STRING = '0x278194af0f8DcAaa16660Df9a94DF5689d7b1344';
+var erc20s = [
+  {
+    symbol: 'EUR',
+    address: '0x278194af0f8DcAaa16660Df9a94DF5689d7b1344'
+  },
+  {
+    symbol: 'USD',
+    address: '0xFa377AE2098C587214542601d91DAB581FFf36a3'
+  }
+];
 
 $(document).ready(init);
 
 function init() {
-  $('#blockexplorer').attr('href', 'https://etherscan.io/token/' + CONTRACT_STRING);
   var metaMaskChecker = setInterval(function() {
     if (typeof web3 == 'undefined') {
       var dlLink = '';
@@ -39,11 +47,15 @@ function getMetaMask() {
   getAcc(function(acc) {
     account = acc;
   });
+
   getABI(function(abi) {
-    contract = getContract(abi,CONTRACT_STRING);
+    erc20s.forEach(function(erc20) {
+      erc20.contract = getContract(abi, erc20.address);
+    });
   });
+
   var checker = setInterval(function() {
-    if (typeof contract != 'undefined') {
+    if (!erc20s.some(function(erc20) { return typeof erc20.contract === 'undefined'; } )) {
       if (typeof account != 'undefined') {
         $('#wallet').show();
         startApp(account);
@@ -60,10 +72,12 @@ function processBlocks(blockNumberStart, blockNumberEnd) {
         block.transactions.forEach( function(tx) {
           txObj = { hash: tx.hash, date: block.timestamp };
 
-          if (tx.to.toLowerCase() === CONTRACT_STRING.toLowerCase()) {
+          erc20 = erc20s.find(function(erc20) { return erc20.address.toLowerCase() == tx.to.toLowerCase(); });
+
+          if (erc20) {
             web3.eth.getTransactionReceipt(tx.hash, function(err, receipt) {
               txObj.value = web3.toDecimal(receipt.logs[0].data) / 100;
-              txObj.unit = 'EUR';
+              txObj.unit = erc20.symbol;
 
               if (tx.from == account) {
                 txObj.eventType = 'Sent';
@@ -90,12 +104,16 @@ function processBlocks(blockNumberStart, blockNumberEnd) {
 }
 
 function startApp(account) {
-  $('#send').click(function() {
-    sendTokens($('#txAddress').val(), $('#txAmount').val());
+  $('.send.eur').click(function() {
+    sendTokens(erc20s[0].contract, $('#txAddress').val(), $('#txAmount').val());
   });
 
-  setBalance();
-  setInterval(setBalance, 5000);
+  $('.send.usd').click(function() {
+    sendTokens(erc20s[1].contract, $('#txAddress').val(), $('#txAmount').val());
+  });
+
+  setBalances();
+  setInterval(setBalances, 5000);
 
   var lastProcessedBlockNumber;
 
@@ -118,11 +136,11 @@ function startApp(account) {
   $('#qr-address').attr('src', 'https://chart.googleapis.com/chart?cht=qr&chl=' + account + '&chs=235x235&chld=L|0')
 }
 
-function sendTokens(to,amount) {
+function sendTokens(contract, to, amount) {
   contract.transfer(to,amount * 100, function(err, res) {
     var txChecker = setInterval(function() {
       web3.eth.getTransactionReceipt(String(res), function(e,r) {
-        setBalance();
+        setBalances();
         if (r)
           clearInterval(txChecker);
       });
@@ -130,9 +148,15 @@ function sendTokens(to,amount) {
   });
 }
 
-function setBalance() {
-  getBalance(account, function(b) {
-    $('#balance').html(l(b));
+function setBalances() {
+  erc20s.forEach(function(erc20) {
+    setBalance(erc20);
+  });
+}
+
+function setBalance(erc20) {
+  getBalance(erc20.contract, account, function(b) {
+    $('.balances .' + erc20.symbol.toLowerCase()).html(l(b));
   })
 }
 
@@ -169,7 +193,7 @@ function date(unix) {
   return d.getMonth()+'/'+d.getDate()+'/'+d.getFullYear()+', '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
 }
 
-function getBalance(acc, callback) {
+function getBalance(contract, acc, callback) {
   contract.balanceOf(acc, function(err, res) {
     callback(res.c[0]);
   });
