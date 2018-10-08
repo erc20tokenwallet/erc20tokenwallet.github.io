@@ -82,7 +82,7 @@ function processBlocks(blockNumberStart, blockNumberEnd) {
 
           if (tx.to.toLowerCase() === CONTRACT_STRING.toLowerCase()) {
             web3.eth.getTransactionReceipt(tx.hash, function(err, receipt) {
-              txObj.value = web3.toDecimal(receipt.logs[0].data);
+              txObj.value = web3.toDecimal(receipt.logs[0].data) / 100;
               txObj.unit = 'EUR';
 
               if (tx.from == account) {
