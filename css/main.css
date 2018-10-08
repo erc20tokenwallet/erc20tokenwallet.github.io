@@ -124,3 +124,7 @@ p, h1, h2, h3 {
   background-color:#dddddd;
   color:black;
 }
+
+#txList .loading {
+  text-align: center;
+}

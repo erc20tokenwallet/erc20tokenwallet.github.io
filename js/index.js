@@ -127,6 +127,7 @@ function startApp(account) {
         if (blockNumber > lastProcessedBlockNumber) {
           processBlocks(lastProcessedBlockNumber + 1, blockNumber);
           lastProcessedBlockNumber = blockNumber;
+          $('#txList .loading').hide();
         }
       });
     }, 2000);
@@ -175,7 +176,7 @@ function addTx(tx) {
   trHtml += '<td>' + date(tx.date * 1000) + '</td>';
   trHtml += '</tr>';
 
-  $('#txList').append(trHtml);
+  $(trHtml).insertBefore('#txList .loading');
 }
 
 function no0s(add) {
