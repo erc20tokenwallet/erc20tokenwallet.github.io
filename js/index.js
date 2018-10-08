@@ -78,10 +78,32 @@ function processBlocks(blockNumberStart, blockNumberEnd) {
     web3.eth.getBlock(i, true, function(err, block) {
       if (block != null && block.transactions != null) {
         block.transactions.forEach( function(tx) {
-          if (account == "*" || account == tx.from || account == tx.to) {
-            addTx(block, tx);
+          txObj = { hash: tx.hash, date: block.timestamp };
+
+          if (tx.to.toLowerCase() === CONTRACT_STRING.toLowerCase()) {
+            web3.eth.getTransactionReceipt(tx.hash, function(err, receipt) {
+              txObj.value = web3.toDecimal(receipt.logs[0].data);
+              txObj.unit = 'EUR';
+
+              if (tx.from == account) {
+                txObj.eventType = 'Sent';
+                txObj.address = no0s(receipt.logs[0].topics[2]);
+              } else {
+                txObj.eventType = 'Received';
+                txObj.address = no0s(receipt.logs[0].topics[1]);
+              }
+
+              addTx(txObj);
+            });
+          } else if (account == tx.from || account == tx.to) {
+            txObj.eventType = account == tx.from ? 'Sent' : 'Received';
+            txObj.address = account == tx.from ? tx.to : tx.from;
+            txObj.value =  web3.fromWei(web3.toDecimal(tx.value));
+            txObj.unit = 'ETH';
+
+            addTx(txObj);
           }
-        })
+        });
       }
     });
   }
@@ -142,17 +164,11 @@ function amountLink(hash, amount, unit) {
   return '<a href="http://explorer.psico.exchange/tx.html?hash=' + hash + '">' + amount + ' ' + unit + '</a>';
 }
 
-function addTx(block, tx) {
+function addTx(tx) {
   var trHtml = '<tr>';
-
-  if (tx.to == account) {
-    trHtml += '<td><b>From:  </b>' + accountLink(tx.from) + '</td>';
-  } else {
-    trHtml += '<td><b>From:  </b>' + accountLink(tx.to) + '</td>';
-  }
-
-  trHtml += '<td>' + amountLink(tx.hash, web3.fromWei(web3.toDecimal(tx.value)), 'ether')  + '</td>';
-  trHtml += '<td>' + date(block.timestamp * 1000) + '</td>';
+  trHtml += '<td><b>' + (tx.eventType == 'Received' ? 'From' : 'To') + ': </b>' + accountLink(tx.address) + '</td>';
+  trHtml += '<td>' + amountLink(tx.hash, tx.value, tx.unit)  + '</td>';
+  trHtml += '<td>' + date(tx.date * 1000) + '</td>';
   trHtml += '</tr>';
 
   $('#txList').append(trHtml);
