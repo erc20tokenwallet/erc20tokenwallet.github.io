@@ -31,27 +31,7 @@ function init() {
     else
       switchPage('wallet');
   },500);
-  web3.version.getNetwork(function(err, netId) {
-    switch (netId) {
-      case '1':
-        console.log('mainnet');
-        break;
-      case '2':
-        console.log('deprecated Morden testnet');
-        break;
-      case '3':
-        console.log('ropsten testnet');
-        break;
-      case '4':
-        console.log('Rinkeby testnet');
-        break;
-      case '42':
-        console.log('Kovan testnet');
-        break;
-      default:
-        console.log('unknown network');
-    }
-  });
+
   getMetaMask();
 }
 
